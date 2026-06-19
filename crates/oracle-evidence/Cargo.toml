@@ -1,0 +1,25 @@
+[package]
+name = "oracle-evidence"
+description = "Append-only evidence store with content-addressable storage and cryptographic integrity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+oracle-core = { path = "../oracle-core" }
+oracle-audit = { path = "../oracle-audit" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+rusqlite = { workspace = true }
+walkdir = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

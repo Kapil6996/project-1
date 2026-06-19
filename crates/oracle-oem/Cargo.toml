@@ -1,0 +1,22 @@
+[package]
+name = "oracle-oem"
+description = "OEM plugin system for manufacturer-specific forensic artifact support"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+oracle-core = { path = "../oracle-core" }
+oracle-audit = { path = "../oracle-audit" }
+oracle-parser = { path = "../oracle-parser" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

@@ -1,0 +1,102 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/oracle-core",
+    "crates/oracle-audit",
+    "crates/oracle-evidence",
+    "crates/oracle-capability",
+    "crates/oracle-discovery",
+    "crates/oracle-parser",
+    "crates/oracle-oem",
+    "crates/oracle-normalize",
+    "crates/oracle-correlate",
+    "crates/oracle-confidence",
+    "crates/oracle-report",
+    "crates/oracle-cli",
+]
+
+[workspace.package]
+version = "1.0.0-alpha.1"
+edition = "2021"
+license = "LicenseRef-Proprietary"
+authors = ["ORACLE Forensics Team"]
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Serialization — Apache 2.0 / MIT
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+
+# Configuration — MIT / Apache 2.0
+toml = "0.8.19"
+
+# Cryptographic hashing — MIT / Apache 2.0
+# Justification: SHA-256 is the NIST-approved hash for forensic integrity verification.
+sha2 = "0.10.8"
+# Hex encoding for hash display
+hex = "0.4.3"
+
+# Unique identifiers — MIT / Apache 2.0
+# Justification: UUIDv4 for investigation IDs, artifact IDs, and audit entry IDs.
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+
+# Timestamps — MIT / Apache 2.0
+# Justification: Precise timestamp handling with timezone support for forensic normalization.
+chrono = { version = "0.4.38", features = ["serde"] }
+
+# Error handling — MIT / Apache 2.0
+thiserror = "2.0.9"
+anyhow = "1.0.94"
+
+# Logging — MIT / Apache 2.0
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["json", "env-filter"] }
+
+# Database — Public Domain (SQLite is public domain; rusqlite is MIT)
+# Justification: SQLite is the most battle-tested embedded database. Used for the Event Log
+# and relational projection. No external server dependency. Court-accepted storage format.
+rusqlite = { version = "0.32.1", features = ["bundled", "backup", "blob"] }
+
+# ADB communication — MIT / Apache 2.0
+# Justification: Pure-Rust ADB protocol implementation avoids dependency on host adb binary.
+# We use this as a foundation and extend with custom forensic transport logic.
+adb_client = "1.0.5"
+
+# XML parsing — MIT
+# Justification: Parsing WifiConfigStore.xml and other Android XML configuration files.
+quick-xml = { version = "0.37.1", features = ["serialize"] }
+
+# Regex — MIT / Apache 2.0
+# Justification: Pattern matching for log parsing, BSSID/SSID extraction.
+regex = "1.11.1"
+
+# CLI framework — MIT / Apache 2.0
+clap = { version = "4.5.23", features = ["derive"] }
+
+# Temporary file handling — MIT / Apache 2.0
+tempfile = "3.14.0"
+
+# Filesystem traversal — MIT
+walkdir = "2.5.0"
+
+# Base64 encoding — MIT / Apache 2.0
+base64 = "0.22.1"
+
+# PDF generation — MIT
+# Justification: Generating court-ready PDF reports without external dependencies.
+printpdf = "0.7.0"
+
+# Platform-specific USB detection
+# Justification: Detecting USB device connection for forensic device identification.
+rusb = "0.9.4"
+
+# Async runtime — MIT
+tokio = { version = "1.42.0", features = ["full"] }
+
+# Cross-crate testing utilities
+assert_matches = "1.5.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = "symbols"

@@ -1,0 +1,25 @@
+[package]
+name = "oracle-report"
+description = "Court-ready forensic report generator with PDF and JSON output"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+oracle-core = { path = "../oracle-core" }
+oracle-audit = { path = "../oracle-audit" }
+oracle-evidence = { path = "../oracle-evidence" }
+oracle-correlate = { path = "../oracle-correlate" }
+oracle-confidence = { path = "../oracle-confidence" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+printpdf = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

@@ -1,0 +1,24 @@
+[package]
+name = "oracle-parser"
+description = "Parser registry and core parsers for Android forensic artifact formats"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+oracle-core = { path = "../oracle-core" }
+oracle-audit = { path = "../oracle-audit" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+regex = { workspace = true }
+quick-xml = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

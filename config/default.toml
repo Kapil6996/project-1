@@ -1,0 +1,58 @@
+# ORACLE — Default Configuration
+#
+# This file provides default settings for the ORACLE Android Network
+# Forensics Platform. Copy this file and adjust values as needed for
+# your forensic lab environment.
+#
+# All paths are relative to the working directory unless absolute.
+
+[general]
+# Base directory for storing investigation data.
+investigations_dir = "investigations"
+
+# The forensic lab or agency name recorded in all reports.
+organization_name = "ORACLE Forensic Lab"
+
+# Log level for internal tracing. Options: trace, debug, info, warn, error.
+log_level = "info"
+
+[evidence_store]
+# Maximum size in bytes for a single CAS blob before splitting.
+# Default: 4GB (4294967296) for FAT32 compatibility on external drives.
+max_blob_size_bytes = 4294967296
+
+# Whether to verify artifact hashes on every read (paranoid mode).
+# Enabled by default. Disabling sacrifices integrity for speed.
+verify_on_read = true
+
+[audit]
+# The batch size for audit log hash chain computation.
+# Each batch is hashed together for performance.
+# Default: 1 (every entry individually chained — maximum integrity).
+chain_batch_size = 1
+
+[plugins]
+# Directory containing installed OEM plugins.
+plugin_dir = "plugins"
+
+# Whether to enforce plugin signature verification.
+# Set to true for production deployments.
+enforce_signatures = false
+
+[adb]
+# Timeout in seconds for ADB commands.
+command_timeout_secs = 30
+
+# Maximum number of transport reconnection attempts.
+max_reconnect_attempts = 5
+
+# Chunk size in bytes for artifact streaming from device.
+# Minimum: 4096 bytes.
+stream_chunk_size = 65536
+
+[report]
+# Default output directory for generated reports.
+output_dir = "reports"
+
+# Whether to include raw hex dumps in the evidence appendix.
+include_hex_dumps = false

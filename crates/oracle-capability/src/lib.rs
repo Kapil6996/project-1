@@ -8,15 +8,14 @@
 //! and parsing pipelines — ensuring ORACLE only attempts extractions that are
 //! feasible for the specific device under examination.
 //!
-//! # Modules (planned)
+//! # Modules
 //!
-//! - `detector` — Core capability detection logic
-//! - `profile` — Device capability profile builder
-//! - `probes` — Individual device probes (root, OS version, OEM, etc.)
-//! - `registry` — Known device capability database
+//! - [`adb`] — ADB connection and command transport.
+//! - [`detector`] — Core capability detection logic.
+//! - [`profiles`] — Device capability profile builder.
+//! - [`briefing`] — Investigator briefing and acknowledgment.
 
-// TODO: Uncomment as modules are implemented
-// pub mod detector;
-// pub mod profile;
-// pub mod probes;
-// pub mod registry;
+pub mod adb;
+pub mod briefing;
+pub mod detector;
+pub mod profiles;

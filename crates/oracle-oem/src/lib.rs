@@ -8,15 +8,12 @@
 //! support these manufacturer-specific artifacts through a unified plugin API
 //! without coupling the core platform to any single OEM's implementation.
 //!
-//! # Modules (planned)
+//! # Modules
 //!
-//! - `plugin` — Plugin trait definition and lifecycle management
-//! - `loader` — Dynamic plugin discovery and loading
-//! - `registry` — OEM plugin registry and dispatch
-//! - `samsung` — Samsung-specific artifact support
-//! - `xiaomi` — Xiaomi-specific artifact support
+//! - [`plugin`] — Plugin trait definition and lifecycle management.
+//! - [`validation`] — Plugin integrity validation and verification.
+//! - [`samsung`] — Samsung OneUI-specific artifact support.
 
-// TODO: Uncomment as modules are implemented
-// pub mod plugin;
-// pub mod loader;
-// pub mod registry;
+pub mod plugin;
+pub mod validation;
+pub mod samsung;

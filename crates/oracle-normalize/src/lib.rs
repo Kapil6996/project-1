@@ -8,22 +8,51 @@
 //! wildly different formats. The normalization layer transforms all parsed
 //! artifacts into ORACLE's canonical types to enable cross-source correlation.
 //!
-//! # Key Normalizations
+//! # Modules
 //!
-//! - **Timestamps:** All timestamps converted to UTC nanosecond epochs
-//! - **MAC Addresses:** Normalized to uppercase colon-separated format
-//! - **SSIDs:** Unicode-normalized and whitespace-trimmed
-//! - **GPS Coordinates:** Standardized to WGS84 decimal degrees
+//! - [`ssid`] — SSID normalization (quoted, hex-encoded, Unicode escapes).
+//! - [`bssid`] — BSSID/MAC address normalization and validation.
+//! - [`timestamp`] — Timestamp normalization across formats and timezones.
+//! - [`security`] — Wi-Fi security protocol normalization.
+//! - [`conflict`] — Cross-source conflict detection and reporting.
+//! - [`provenance`] — Provenance chain validation for evidence integrity.
 //!
-//! # Modules (planned)
+//! # Architecture
 //!
-//! - `normalizer` — Core normalization pipeline
-//! - `timestamp` — Timestamp normalization across formats and timezones
-//! - `network` — MAC address and SSID normalization
-//! - `location` — GPS coordinate normalization
+//! ```text
+//! ┌────────────┐  ┌────────────┐  ┌──────────────┐  ┌────────────────┐
+//! │   SSID     │  │   BSSID    │  │  Timestamp   │  │   Security     │
+//! │ Normalizer │  │ Normalizer │  │  Normalizer  │  │  Normalizer    │
+//! └─────┬──────┘  └─────┬──────┘  └──────┬───────┘  └───────┬────────┘
+//!       │               │                │                   │
+//!       └───────────────┴────────┬───────┴───────────────────┘
+//!                                │
+//!                     ┌──────────▼──────────┐
+//!                     │  Conflict Detector  │
+//!                     └──────────┬──────────┘
+//!                                │
+//!                     ┌──────────▼──────────┐
+//!                     │ Provenance Validator │
+//!                     └─────────────────────┘
+//! ```
 
-// TODO: Uncomment as modules are implemented
-// pub mod normalizer;
-// pub mod timestamp;
-// pub mod network;
-// pub mod location;
+pub mod ssid;
+pub mod bssid;
+pub mod timestamp;
+pub mod security;
+pub mod conflict;
+pub mod provenance;
+
+// Re-export primary types for ergonomic downstream usage.
+pub use ssid::{NormalizedSsid, SsidEncoding, SsidNormalizer};
+pub use bssid::{BssidNormalizer, NormalizedBssid};
+pub use timestamp::TimestampNormalizer;
+pub use security::SecurityNormalizer;
+pub use conflict::{
+    Conflict, ConflictCategory, ConflictDetector, ConflictId, ConflictReport,
+    ConflictSeverity, ConflictSource, ConflictSummary,
+};
+pub use provenance::{
+    ProvenanceLink, ProvenanceReport, ProvenanceSummary, ProvenanceValidator,
+    ValidationFinding, ValidationId, ValidationResult,
+};

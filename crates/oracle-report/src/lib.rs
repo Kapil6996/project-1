@@ -15,18 +15,34 @@
 //!
 //! # Output Formats
 //!
-//! - PDF — Court-ready formatted document
-//! - JSON — Machine-readable structured output
+//! - PDF — Court-ready formatted document via [`pdf::render_pdf`]
+//! - JSON — Machine-readable structured output via [`generator::JsonRenderer`]
 //!
-//! # Modules (planned)
+//! # Modules
 //!
-//! - `generator` — Report generation orchestrator
-//! - `pdf` — PDF output renderer using printpdf
-//! - `json` — JSON structured output renderer
-//! - `template` — Report template engine
+//! - [`types`] — Core report data structures.
+//! - [`generator`] — Report generation orchestrator and JSON renderer.
+//! - [`appendix`] — Evidence appendix builder with cross-referencing.
+//! - [`custody_report`] — Chain of custody document generator.
+//! - [`signing`] — Report signing and tamper-evidence verification.
+//! - [`pdf`] — PDF output renderer using printpdf.
 
-// TODO: Uncomment as modules are implemented
-// pub mod generator;
-// pub mod pdf;
-// pub mod json;
-// pub mod template;
+pub mod types;
+pub mod generator;
+pub mod appendix;
+pub mod custody_report;
+pub mod signing;
+pub mod pdf;
+
+// Re-export primary types for ergonomic downstream usage.
+pub use types::{
+    EvidenceEntry, ForensicReport, InvestigationSummary, ReportFinding, ReportId, ReportMetadata,
+    ReportType,
+};
+pub use generator::{JsonRenderer, ReportGenerator};
+pub use appendix::{
+    EvidenceAppendix, EvidenceAppendixBuilder, EvidenceEntryInput, render_appendix_text,
+};
+pub use custody_report::{CustodyDocument, CustodyDocumentBuilder};
+pub use signing::{sign_report, verify_report, SignedReport, VerificationResult};
+pub use pdf::{render_pdf, PdfError};

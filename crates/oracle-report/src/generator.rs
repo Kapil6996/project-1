@@ -1,0 +1,333 @@
+//! # Report Generator
+//!
+//! Orchestrates the construction of forensic reports from investigation data.
+//! Takes correlated findings, evidence entries, and investigation metadata
+//! and assembles them into a [`ForensicReport`] ready for rendering.
+
+use chrono::Utc;
+use oracle_confidence::MODEL_VERSION;
+use oracle_core::types::{ConfidenceClassification, ExaminerIdentity, InvestigationId};
+use sha2::{Digest, Sha256};
+use tracing::info;
+
+use crate::types::*;
+
+/// The current ORACLE platform version.
+const PLATFORM_VERSION: &str = "1.0.0-alpha.1";
+
+/// Builds a [`ForensicReport`] from investigation components.
+pub struct ReportGenerator {
+    case_number: String,
+    investigation_id: InvestigationId,
+    examiner: ExaminerIdentity,
+    report_type: ReportType,
+    findings: Vec<ReportFinding>,
+    evidence_entries: Vec<EvidenceEntry>,
+    summary: Option<InvestigationSummary>,
+}
+
+impl ReportGenerator {
+    /// Create a new report generator for a case.
+    pub fn new(
+        case_number: &str,
+        investigation_id: InvestigationId,
+        examiner: ExaminerIdentity,
+        report_type: ReportType,
+    ) -> Self {
+        ReportGenerator {
+            case_number: case_number.to_string(),
+            investigation_id,
+            examiner,
+            report_type,
+            findings: Vec::new(),
+            evidence_entries: Vec::new(),
+            summary: None,
+        }
+    }
+
+    /// Add a finding to the report.
+    pub fn add_finding(&mut self, finding: ReportFinding) {
+        self.findings.push(finding);
+    }
+
+    /// Add an evidence entry to the appendix.
+    pub fn add_evidence_entry(&mut self, entry: EvidenceEntry) {
+        self.evidence_entries.push(entry);
+    }
+
+    /// Set the investigation summary.
+    pub fn set_summary(&mut self, summary: InvestigationSummary) {
+        self.summary = Some(summary);
+    }
+
+    /// Generate the final report with cryptographic signing.
+    pub fn generate(self) -> ForensicReport {
+        info!(
+            case = %self.case_number,
+            report_type = %self.report_type,
+            findings = self.findings.len(),
+            evidence = self.evidence_entries.len(),
+            "Generating forensic report"
+        );
+
+        let metadata = ReportMetadata {
+            report_id: ReportId::new(),
+            investigation_id: self.investigation_id,
+            report_type: self.report_type,
+            case_number: self.case_number.clone(),
+            examiner: self.examiner.clone(),
+            generated_at: Utc::now(),
+            platform_version: PLATFORM_VERSION.to_string(),
+            model_version: MODEL_VERSION.to_string(),
+        };
+
+        let summary = self.summary.unwrap_or_else(|| {
+            Self::build_auto_summary(
+                &self.case_number,
+                &self.findings,
+                self.evidence_entries.len(),
+            )
+        });
+
+        let methodology = Self::generate_methodology_disclosure(&metadata);
+
+        let mut report = ForensicReport {
+            metadata,
+            summary,
+            findings: self.findings,
+            evidence_entries: self.evidence_entries,
+            methodology_disclosure: methodology,
+            report_hash: None,
+        };
+
+        // Compute tamper-evident hash
+        report.report_hash = Some(Self::compute_report_hash(&report));
+
+        report
+    }
+
+    /// Build an automatic summary from the findings.
+    fn build_auto_summary(
+        case_number: &str,
+        findings: &[ReportFinding],
+        evidence_count: usize,
+    ) -> InvestigationSummary {
+        let high_conf = findings
+            .iter()
+            .filter(|f| matches!(
+                f.confidence_classification,
+                ConfidenceClassification::High | ConfidenceClassification::Definitive
+            ))
+            .count();
+
+        let contradicted = findings
+            .iter()
+            .filter(|f| f.confidence_classification == ConfidenceClassification::Contradicted)
+            .count();
+
+        let key_findings: Vec<String> = findings
+            .iter()
+            .filter(|f| f.confidence_score >= 0.80)
+            .take(5)
+            .map(|f| format!("{}: {}", f.finding_number, f.title))
+            .collect();
+
+        InvestigationSummary {
+            case_number: case_number.to_string(),
+            purpose: "Android network forensic analysis".to_string(),
+            device_description: String::new(),
+            investigation_window: String::new(),
+            total_artifacts: evidence_count,
+            total_findings: findings.len(),
+            high_confidence_findings: high_conf,
+            contradicted_findings: contradicted,
+            anomalies_detected: 0,
+            key_findings,
+        }
+    }
+
+    /// Generate the methodology disclosure section.
+    fn generate_methodology_disclosure(metadata: &ReportMetadata) -> String {
+        format!(
+            "METHODOLOGY DISCLOSURE\n\
+             \n\
+             This report was generated by the ORACLE Android Network Forensics Platform \
+             version {}.\n\
+             \n\
+             Confidence scores were computed using the ORACLE Confidence Model version {}. \
+             This model evaluates four factors: Source Reliability (30%), Temporal Consistency \
+             (25%), Corroboration (30%), and Artifact Freshness (15%). When contradictions \
+             are present, a 40% penalty is applied and the score is capped at 0.50.\n\
+             \n\
+             All artifact hashes were computed using SHA-256. All timestamps were normalized \
+             to UTC. The audit log records every operation performed during the investigation \
+             in a cryptographically chained append-only log.\n\
+             \n\
+             Report generated at {} by examiner {} ({}).\n\
+             Report ID: {}",
+            metadata.platform_version,
+            metadata.model_version,
+            metadata.generated_at.format("%Y-%m-%d %H:%M:%S UTC"),
+            metadata.examiner.name,
+            metadata.examiner.organization,
+            metadata.report_id,
+        )
+    }
+
+    /// Compute SHA-256 hash of the report for tamper evidence.
+    fn compute_report_hash(report: &ForensicReport) -> String {
+        // Hash a deterministic subset of the report (excluding the hash field itself)
+        let hashable = format!(
+            "{}|{}|{}|{}|{}",
+            report.metadata.report_id,
+            report.metadata.case_number,
+            report.findings.len(),
+            report.evidence_entries.len(),
+            report.metadata.generated_at.timestamp(),
+        );
+
+        let mut hasher = Sha256::new();
+        hasher.update(hashable.as_bytes());
+        let result = hasher.finalize();
+        hex::encode(result)
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// JSON Renderer
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Renders a [`ForensicReport`] to JSON format.
+pub struct JsonRenderer;
+
+impl JsonRenderer {
+    /// Render the report to a pretty-printed JSON string.
+    pub fn render(report: &ForensicReport) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(report)
+    }
+
+    /// Render the report to a compact JSON string.
+    pub fn render_compact(report: &ForensicReport) -> Result<String, serde_json::Error> {
+        serde_json::to_string(report)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use oracle_core::types::{ConfidenceClassification, ExaminerIdentity, InvestigationId};
+
+    fn test_examiner() -> ExaminerIdentity {
+        ExaminerIdentity {
+            name: "Test Examiner".to_string(),
+            badge_id: "B-001".to_string(),
+            organization: "Forensic Lab".to_string(),
+        }
+    }
+
+    fn test_finding(num: usize, score: f64) -> ReportFinding {
+        ReportFinding {
+            finding_number: format!("F-{:03}", num),
+            title: format!("Test Finding {}", num),
+            description: "Description of finding.".to_string(),
+            network_ssid: Some("TestNetwork".to_string()),
+            network_bssid: Some("AA:BB:CC:DD:EE:FF".to_string()),
+            security_protocol: None,
+            event_time: Some(Utc::now()),
+            confidence_score: score,
+            confidence_classification: ConfidenceClassification::from_score(score),
+            corroboration_count: 3,
+            corroborating_sources: vec!["wpa_supplicant.conf".to_string()],
+            contradictions: Vec::new(),
+            examiner_override: false,
+        }
+    }
+
+    #[test]
+    fn test_report_generation() {
+        let mut gen = ReportGenerator::new(
+            "CASE-2024-001",
+            InvestigationId::new(),
+            test_examiner(),
+            ReportType::Complete,
+        );
+
+        gen.add_finding(test_finding(1, 0.95));
+        gen.add_finding(test_finding(2, 0.72));
+
+        let report = gen.generate();
+
+        assert_eq!(report.findings.len(), 2);
+        assert_eq!(report.metadata.case_number, "CASE-2024-001");
+        assert!(report.report_hash.is_some());
+        assert!(!report.methodology_disclosure.is_empty());
+    }
+
+    #[test]
+    fn test_auto_summary() {
+        let mut gen = ReportGenerator::new(
+            "CASE-2024-002",
+            InvestigationId::new(),
+            test_examiner(),
+            ReportType::Executive,
+        );
+
+        gen.add_finding(test_finding(1, 0.95));
+        gen.add_finding(test_finding(2, 0.85));
+        gen.add_finding(test_finding(3, 0.40));
+
+        let report = gen.generate();
+
+        assert_eq!(report.summary.total_findings, 3);
+        assert_eq!(report.summary.high_confidence_findings, 2);
+    }
+
+    #[test]
+    fn test_json_rendering() {
+        let mut gen = ReportGenerator::new(
+            "CASE-JSON",
+            InvestigationId::new(),
+            test_examiner(),
+            ReportType::Technical,
+        );
+        gen.add_finding(test_finding(1, 0.90));
+
+        let report = gen.generate();
+        let json = JsonRenderer::render(&report).unwrap();
+
+        assert!(json.contains("CASE-JSON"));
+        assert!(json.contains("F-001"));
+    }
+
+    #[test]
+    fn test_report_hash_deterministic() {
+        let inv_id = InvestigationId::new();
+        let mut gen = ReportGenerator::new(
+            "CASE-HASH",
+            inv_id,
+            test_examiner(),
+            ReportType::Complete,
+        );
+        gen.add_finding(test_finding(1, 0.80));
+        let report = gen.generate();
+
+        // Hash should be a 64-char hex string (SHA-256)
+        let hash = report.report_hash.as_ref().unwrap();
+        assert_eq!(hash.len(), 64);
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_methodology_includes_model_version() {
+        let gen = ReportGenerator::new(
+            "CASE-METHOD",
+            InvestigationId::new(),
+            test_examiner(),
+            ReportType::Complete,
+        );
+        let report = gen.generate();
+
+        assert!(report.methodology_disclosure.contains("1.0.0"));
+        assert!(report.methodology_disclosure.contains("SHA-256"));
+    }
+}

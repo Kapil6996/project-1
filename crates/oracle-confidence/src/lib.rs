@@ -5,20 +5,34 @@
 //!
 //! Every forensic conclusion must be accompanied by a confidence score
 //! that communicates to investigators and courts how much weight to assign
-//! to the finding. The scoring engine evaluates evidence based on:
+//! to the finding. The scoring engine evaluates evidence based on four
+//! weighted factors defined in the Confidence Model v1.0.
 //!
-//! - **Source reliability:** Was the artifact extracted from a trusted path?
-//! - **Temporal consistency:** Do timestamps corroborate across sources?
-//! - **Corroboration count:** How many independent sources confirm the finding?
-//! - **Artifact freshness:** Is the evidence from the relevant time window?
+//! # Modules
 //!
-//! # Modules (planned)
+//! - [`model`] — Confidence Model v1.0 formal documentation and constants.
+//! - [`scorer`] — Deterministic score computation engine with examiner overrides.
 //!
-//! - `scorer` — Core confidence scoring algorithms
-//! - `factors` — Individual scoring factor definitions
-//! - `aggregator` — Multi-factor score aggregation
+//! # Architecture
+//!
+//! ```text
+//! ┌──────────────────┐     ┌───────────────┐     ┌──────────────────┐
+//! │  ScoringInput    │──▶──│ ScoringEngine │──▶──│ ConfidenceScore  │
+//! │  (factors)       │     │ (deterministic)│     │ (versioned)      │
+//! └──────────────────┘     └───────────────┘     └──────────────────┘
+//!                                │                        │
+//!                                ▼                        ▼
+//!                        ┌───────────────┐        ┌──────────────┐
+//!                        │ ExaminerOverride│       │ ScoreHistory │
+//!                        └───────────────┘        └──────────────┘
+//! ```
 
-// TODO: Uncomment as modules are implemented
-// pub mod scorer;
-// pub mod factors;
-// pub mod aggregator;
+pub mod model;
+pub mod scorer;
+
+// Re-export primary types.
+pub use model::{ModelDocumentation, MODEL_VERSION};
+pub use scorer::{
+    ConfidenceScore, ExaminerOverride, FactorBreakdown, ScoreHistory, ScoreId, ScoringEngine,
+    ScoringInput,
+};

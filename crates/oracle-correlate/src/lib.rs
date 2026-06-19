@@ -8,22 +8,46 @@
 //! event corroborated by a logcat entry and a location record, all timestamped
 //! within the same window, produces a high-confidence forensic finding.
 //!
-//! # Key Capabilities
+//! # Architecture
 //!
-//! - **Timeline construction:** Unified chronological view across all sources
-//! - **Cross-source correlation:** Match events from different artifact types
-//! - **Cluster detection:** Group related events into forensic "sessions"
-//! - **Anomaly detection:** Identify temporal inconsistencies or tampering
+//! ```text
+//! ┌──────────────┐     ┌─────────────────┐     ┌──────────────┐
+//! │   Identity   │──▶──│    Event         │──▶──│   Timeline   │
+//! │   Resolver   │     │  Reconstructor   │     │   Builder    │
+//! └──────────────┘     └─────────────────┘     └──────┬───────┘
+//!                                                      │
+//!        ┌─────────────────────────────┬───────────────┘
+//!        ▼                             ▼
+//! ┌──────────────┐              ┌─────────────┐
+//! │    Role      │              │   Anomaly   │
+//! │  Classifier  │              │  Detector   │
+//! └──────────────┘              └─────────────┘
+//! ```
 //!
-//! # Modules (planned)
+//! # Modules
 //!
-//! - `engine` — Core correlation engine
-//! - `timeline` — Unified timeline builder
-//! - `matcher` — Cross-source event matching
-//! - `cluster` — Related event clustering
+//! - [`types`] — Shared types (resolved network identities, claims).
+//! - [`identity`] — Network Identity Resolver (de-duplication & merging).
+//! - [`events`] — Connection Event Reconstructor.
+//! - [`roles`] — Hotspot vs Client Distinguisher.
+//! - [`timeline`] — Unified Timeline Builder.
+//! - [`anomaly`] — Anomaly Detector & Contradiction Handler.
 
-// TODO: Uncomment as modules are implemented
-// pub mod engine;
-// pub mod timeline;
-// pub mod matcher;
-// pub mod cluster;
+pub mod types;
+pub mod identity;
+pub mod events;
+pub mod roles;
+pub mod timeline;
+pub mod anomaly;
+
+// Re-export primary types for ergonomic downstream usage.
+pub use types::{NetworkClaim, NetworkIdentityId, ResolvedNetwork};
+pub use identity::NetworkIdentityResolver;
+pub use events::{
+    ConnectionEvent, ConnectionEventId, ConnectionEventType, EventEvidence, EventReconstructor,
+};
+pub use roles::{RoleClassification, RoleClassifier, RoleSignal};
+pub use timeline::{
+    SessionId, Timeline, TimelineBuilder, TimelineGap, TimelineOverlap, TimelineSession,
+};
+pub use anomaly::{Anomaly, AnomalyCategory, AnomalyDetector, AnomalyId, AnomalyReport, AnomalySeverity};

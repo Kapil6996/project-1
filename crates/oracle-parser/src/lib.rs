@@ -8,24 +8,35 @@
 //! artifact type and invoked by the ingestion pipeline. Each parser
 //! emits typed events that feed into the normalization and correlation layers.
 //!
-//! # Built-in Parsers (planned)
+//! # Built-in Parsers
 //!
-//! - `WifiConfigStore.xml` — Saved Wi-Fi networks with BSSIDs and SSIDs
-//! - `wpa_supplicant.conf` — Legacy Wi-Fi network configurations
-//! - `dumpsys wifi` — Runtime Wi-Fi state and scan results
-//! - `logcat` — Android system log entries with timestamps
+//! | Parser | Artifact | Record Type |
+//! |--------|----------|-------------|
+//! | [`wifi_config::WifiConfigStoreParser`] | `WifiConfigStore.xml` | `wifi_configured_network` |
+//! | [`wpa_supplicant::WpaSupplicantParser`] | `wpa_supplicant.conf` | `wifi_known_network` |
+//! | [`dhcp::DhcpLeaseParser`] | DHCP lease files | `dhcp_lease` |
+//! | [`connectivity::ConnectivityLogParser`] | Connectivity logs | `connectivity_event` |
 //!
-//! # Modules (planned)
+//! # Architecture
 //!
-//! - `registry` — Parser registration and dispatch
-//! - `traits` — Parser trait definitions
-//! - `wifi` — Wi-Fi artifact parsers
-//! - `logcat` — Logcat log parser
-//! - `location` — Location-related artifact parsers
+//! ```text
+//! ┌─────────────┐     ┌──────────────┐     ┌────────────┐
+//! │  Raw Bytes   │────▶│ ParserRegistry│────▶│ ParsedOutput│
+//! │  (artifact)  │     │  (dispatch)   │     │  (records)  │
+//! └─────────────┘     └──────────────┘     └────────────┘
+//! ```
+//!
+//! All parsers implement the [`traits::ArtifactParser`] trait. The
+//! [`registry::ParserRegistry`] dispatches to the correct parser based
+//! on [`ArtifactClass`](oracle_core::ArtifactClass).
 
-// TODO: Uncomment as modules are implemented
-// pub mod registry;
-// pub mod traits;
-// pub mod wifi;
-// pub mod logcat;
-// pub mod location;
+pub mod connectivity;
+pub mod dhcp;
+pub mod registry;
+pub mod traits;
+pub mod wpa_supplicant;
+pub mod wifi_config;
+
+// Re-export primary types for ergonomic imports.
+pub use registry::ParserRegistry;
+pub use traits::{ArtifactParser, ParsedOutput, ParserInfo};

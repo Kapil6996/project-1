@@ -7,15 +7,36 @@
 //! matching rules, and streams discovered artifacts into the evidence store.
 //! Every file access is audited to maintain a complete chain of custody.
 //!
-//! # Modules (planned)
+//! # Architecture
 //!
-//! - `scanner` — Filesystem scanner with configurable path rules
-//! - `rules` — Artifact discovery rule definitions
-//! - `extractor` — Raw artifact extraction and streaming into evidence store
-//! - `manifest` — Discovery manifest builder for investigation records
+//! ```text
+//! ┌─────────────┐     ┌───────────┐     ┌────────────┐     ┌──────────────┐
+//! │ PathRegistry │──▶──│  Scanner  │──▶──│  Manifest  │──▶──│ Acquisition  │
+//! └─────────────┘     └───────────┘     └────────────┘     └──────────────┘
+//! ```
+//!
+//! 1. **Registry** — Enumerates all known device-side paths per artifact class.
+//! 2. **Scanner** — Probes the device via ADB to discover which paths exist.
+//! 3. **Manifest** — Builds a structured manifest of discovered artifacts.
+//! 4. **Acquisition** — Pulls artifacts byte-for-byte with integrity hashing.
+//!
+//! # Modules
+//!
+//! - [`registry`] — Known Android artifact path registry.
+//! - [`scanner`] — Device filesystem scanner with ADB abstraction.
+//! - [`manifest`] — Artifact manifest builder for investigation records.
+//! - [`acquisition`] — Acquisition coordinator for pulling device artifacts.
 
-// TODO: Uncomment as modules are implemented
-// pub mod scanner;
-// pub mod rules;
-// pub mod extractor;
-// pub mod manifest;
+pub mod acquisition;
+pub mod manifest;
+pub mod registry;
+pub mod scanner;
+
+// ── Re-exports for ergonomic access ─────────────────────────────────────────
+
+pub use acquisition::{AcquiredArtifact, AcquisitionCoordinator, AcquisitionReport, FailedArtifact};
+pub use manifest::{ArtifactManifest, ManifestBuilder};
+pub use registry::{ArtifactPathEntry, PathRegistry};
+pub use scanner::{
+    AdbShell, ArtifactScanner, DiscoveredArtifact, InaccessiblePath, ScanResult,
+};

@@ -5,6 +5,11 @@
 //! This binary provides the primary user interface for conducting forensic
 //! investigations, managing evidence, and generating court-ready reports.
 
+mod startup;
+mod pipeline;
+mod commands;
+
+
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -177,6 +182,13 @@ async fn main() -> Result<()> {
 
     print_banner();
 
+    // Run pre-flight checks: ADB, directory writability, audit integrity, plugins.
+    if let Err(e) = startup::run_preflight_checks(&config) {
+        tracing::warn!("Pre-flight check warning: {:#}", e);
+        eprintln!("⚠  Pre-flight check issue: {:#}", e);
+        eprintln!("   Some features may be unavailable. Proceeding with caution.");
+    }
+
     info!(
         organization = %config.general.organization_name,
         investigations_dir = %config.general.investigations_dir.display(),
@@ -189,43 +201,16 @@ async fn main() -> Result<()> {
             examiner,
             description,
         } => {
-            info!(
-                case_name = %case_name,
-                examiner = %examiner,
-                description = ?description,
-                "Creating new investigation"
-            );
-            // Investigation creation will be implemented in a future milestone.
-            // For now, confirm the command was parsed correctly.
-            eprintln!("Investigation creation is not yet implemented.");
-            eprintln!("  Case:     {}", case_name);
-            eprintln!("  Examiner: {}", examiner);
-            if let Some(desc) = description {
-                eprintln!("  Notes:    {}", desc);
-            }
+            commands::new_investigation(&config, case_name, examiner, description)?;
         }
         Commands::Ingest {
             investigation_id,
             source,
         } => {
-            info!(
-                investigation_id = %investigation_id,
-                source = %source,
-                "Starting artifact ingestion"
-            );
-            // Ingestion pipeline will be implemented in a future milestone.
-            eprintln!("Artifact ingestion is not yet implemented.");
-            eprintln!("  Investigation: {}", investigation_id);
-            eprintln!("  Source:         {}", source);
+            commands::ingest(&config, &investigation_id, &source)?;
         }
         Commands::Verify { investigation_id } => {
-            info!(
-                investigation_id = %investigation_id,
-                "Starting integrity verification"
-            );
-            // Integrity verification will be implemented in a future milestone.
-            eprintln!("Integrity verification is not yet implemented.");
-            eprintln!("  Investigation: {}", investigation_id);
+            commands::verify(&config, &investigation_id)?;
         }
     }
 

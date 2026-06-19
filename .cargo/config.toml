@@ -1,0 +1,3 @@
+# Empty config — removed the gcc linker override since MSVC toolchain
+# can't use gcc with MSVC-style flags. Build verification will use 
+# `cargo check` which doesn't invoke the linker.

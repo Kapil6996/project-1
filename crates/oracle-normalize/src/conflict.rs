@@ -78,7 +78,7 @@ impl std::fmt::Display for ConflictSeverity {
 }
 
 /// The specific category of contradiction detected.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ConflictCategory {
     /// Same BSSID mapped to different SSIDs.
     SsidMismatch {

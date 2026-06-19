@@ -256,22 +256,23 @@ impl<'a> PdfPageRenderer<'a> {
 
         // Metadata fields
         self.y_position -= 15.0;
+        let report_id = metadata.report_id.to_string();
+        let investigation_id = metadata.investigation_id.to_string();
+        let generated_at = metadata.generated_at.format("%Y-%m-%d %H:%M:%S UTC").to_string();
+
         let fields = [
-            ("Case Number:", &metadata.case_number),
-            ("Report ID:", &metadata.report_id.to_string()),
-            ("Investigation ID:", &metadata.investigation_id.to_string()),
-            ("Examiner:", &metadata.examiner.name),
-            ("Organization:", &metadata.examiner.organization),
-            ("Badge ID:", &metadata.examiner.badge_id),
-            (
-                "Generated:",
-                &metadata.generated_at.format("%Y-%m-%d %H:%M:%S UTC").to_string(),
-            ),
-            ("Platform Version:", &metadata.platform_version),
-            ("Confidence Model:", &metadata.model_version),
+            ("Case Number:", metadata.case_number.as_str()),
+            ("Report ID:", report_id.as_str()),
+            ("Investigation ID:", investigation_id.as_str()),
+            ("Examiner:", metadata.examiner.name.as_str()),
+            ("Organization:", metadata.examiner.organization.as_str()),
+            ("Badge ID:", metadata.examiner.badge_id.as_str()),
+            ("Generated:", generated_at.as_str()),
+            ("Platform Version:", metadata.platform_version.as_str()),
+            ("Confidence Model:", metadata.model_version.as_str()),
         ];
 
-        for (label, value) in &fields {
+        for &(label, value) in &fields {
             layer.use_text(
                 label,
                 FONT_SIZE_BODY,

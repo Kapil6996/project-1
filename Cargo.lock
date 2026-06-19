@@ -646,6 +646,7 @@ name = "oracle-cli"
 version = "1.0.0-alpha.1"
 dependencies = [
  "anyhow",
+ "chrono",
  "clap",
  "oracle-audit",
  "oracle-capability",
@@ -658,12 +659,14 @@ dependencies = [
  "oracle-oem",
  "oracle-parser",
  "oracle-report",
+ "rusqlite",
  "serde",
  "serde_json",
  "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
@@ -689,6 +692,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "hex",
+ "rusqlite",
  "serde",
  "serde_json",
  "sha2",

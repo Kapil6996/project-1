@@ -37,7 +37,8 @@ run_test_group() {
     ((TOTAL++))
 
     echo -e "\n${BLUE}[$TOTAL]${NC} Running: ${CYAN}$name${NC}"
-    if cargo test --workspace "$filter" 2>&1 | tail -3; then
+    # Use unquoted $filter to allow bash to split arguments (e.g. "-p oracle-cli")
+    if cargo test $filter 2>&1 | tail -3; then
         ((PASS++))
         echo -e "  ${GREEN}[PASS]${NC} $name"
     else
@@ -86,12 +87,12 @@ run_test_group "oracle-cli (pipeline, commands, startup)" "-p oracle-cli"
 echo -e "\n${BLUE}Phase 6: Hardening Tests${NC}"
 echo "────────────────────────────────────────────"
 
-run_test_group "Hardening: Hardware Disconnection" "--test hardening_tests -- hardware_disconnection"
-run_test_group "Hardening: Storage Exhaustion" "--test hardening_tests -- storage_exhaustion"
-run_test_group "Hardening: Database Locking" "--test hardening_tests -- database_locking"
-run_test_group "Hardening: Parser Crash Resilience" "--test hardening_tests -- parser_crash_resilience"
-run_test_group "Hardening: Evidence Corruption Detection" "--test hardening_tests -- evidence_corruption_detection"
-run_test_group "Hardening: Audit Chain Tamper Detection" "--test hardening_tests -- audit_chain_tamper_detection"
+run_test_group "Hardening: Hardware Disconnection" "-p oracle-cli --test hardening_tests -- hardware_disconnection"
+run_test_group "Hardening: Storage Exhaustion" "-p oracle-cli --test hardening_tests -- storage_exhaustion"
+run_test_group "Hardening: Database Locking" "-p oracle-cli --test hardening_tests -- database_locking"
+run_test_group "Hardening: Parser Crash Resilience" "-p oracle-cli --test hardening_tests -- parser_crash_resilience"
+run_test_group "Hardening: Evidence Corruption Detection" "-p oracle-cli --test hardening_tests -- evidence_corruption_detection"
+run_test_group "Hardening: Audit Chain Tamper Detection" "-p oracle-cli --test hardening_tests -- audit_chain_tamper_detection"
 
 # ── Mock Device Profiles ─────────────────────────────────────────────────────
 echo -e "\n${BLUE}Phase 7: Mock Device Profile Validation${NC}"

@@ -64,7 +64,7 @@ install_rust() {
     fi
 
     # Ensure minimum version (1.75+)
-    RUST_MINOR=$(rustc --version | grep -oP '\d+\.(\d+)' | head -1 | cut -d. -f2)
+    RUST_MINOR=$(rustc --version | awk '{print $2}' | cut -d. -f2)
     if [[ "$RUST_MINOR" -lt 75 ]]; then
         echo -e "${YELLOW}[!]${NC} Updating Rust to latest stable..."
         rustup update stable

@@ -768,6 +768,10 @@ pub fn ingest(
     oracle_report::render_pdf(&pipeline_result.signed_report.report, &pdf_path)
         .context("Failed to render PDF report")?;
 
+    // Refresh the audit writer state because pipeline.run() inserted entries and advanced the index.
+    let mut audit_writer = AuditLogWriter::new(&audit_db_path)
+        .map_err(|e| anyhow!("Failed to reopen audit log: {}", e))?;
+
     // Log the export event.
     let export_intent = audit_writer.log_intent(
         Some(investigation_id),

@@ -357,28 +357,28 @@ impl CapabilityDetector {
         debug!(serial = %serial, "Detecting root method");
 
         // Check for Magisk
-        let magisk_path = adb.shell_command(serial, "which magisk")?;
+        let magisk_path = adb.shell_command(serial, "which magisk").unwrap_or_default();
         if !magisk_path.trim().is_empty() && !magisk_path.contains("not found") {
             debug!("Magisk detected at: {}", magisk_path.trim());
             return Ok(RootMethod::Magisk);
         }
 
         // Check for KernelSU
-        let ksu_exists = adb.check_file_exists(serial, "/data/adb/ksu")?;
+        let ksu_exists = adb.check_file_exists(serial, "/data/adb/ksu").unwrap_or_default();
         if ksu_exists {
             debug!("KernelSU detected via /data/adb/ksu");
             return Ok(RootMethod::KernelSU);
         }
 
         // Check for system su binary
-        let su_path = adb.shell_command(serial, "which su")?;
+        let su_path = adb.shell_command(serial, "which su").unwrap_or_default();
         if !su_path.trim().is_empty() && !su_path.contains("not found") {
             debug!("System su binary detected at: {}", su_path.trim());
             return Ok(RootMethod::SystemRoot);
         }
 
         // Check for ADB root (uid=0)
-        let id_output = adb.shell_command(serial, "id")?;
+        let id_output = adb.shell_command(serial, "id").unwrap_or_default();
         if id_output.contains("uid=0") {
             debug!("ADB root detected (uid=0)");
             return Ok(RootMethod::AdbRoot);
@@ -401,7 +401,7 @@ impl CapabilityDetector {
         debug!(serial = %serial, "Detecting SELinux mode");
 
         // Primary: getenforce command
-        let getenforce = adb.shell_command(serial, "getenforce")?;
+        let getenforce = adb.shell_command(serial, "getenforce").unwrap_or_default();
         let getenforce_trimmed = getenforce.trim().to_lowercase();
 
         if getenforce_trimmed.contains("enforcing") {
@@ -416,7 +416,7 @@ impl CapabilityDetector {
 
         // Fallback: read the selinux enforce node
         let enforce_node =
-            adb.shell_command(serial, "cat /sys/fs/selinux/enforce")?;
+            adb.shell_command(serial, "cat /sys/fs/selinux/enforce").unwrap_or_default();
         let enforce_trimmed = enforce_node.trim();
 
         match enforce_trimmed {
@@ -494,7 +494,7 @@ impl CapabilityDetector {
                 // File-based encryption — determine BFU vs AFU
                 // If /data/data/ is accessible and non-empty, CE keys are loaded (AFU)
                 let data_listing =
-                    adb.shell_command(serial, "ls /data/data/ 2>/dev/null")?;
+                    adb.shell_command(serial, "ls /data/data/ 2>/dev/null").unwrap_or_default();
 
                 if data_listing.trim().is_empty() {
                     Ok(EncryptionState::BeforeFirstUnlock)

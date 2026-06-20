@@ -23,17 +23,17 @@ WARN=0
 
 check_pass() {
     echo -e "  ${GREEN}[PASS]${NC} $1"
-    ((PASS++))
+    PASS=$((PASS + 1))
 }
 
 check_fail() {
     echo -e "  ${RED}[FAIL]${NC} $1"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
 }
 
 check_warn() {
     echo -e "  ${YELLOW}[WARN]${NC} $1"
-    ((WARN++))
+    WARN=$((WARN + 1))
 }
 
 echo -e "${BLUE}ORACLE System Diagnostics${NC}"

@@ -34,15 +34,15 @@ TOTAL=0
 run_test_group() {
     local name="$1"
     local filter="$2"
-    ((TOTAL++))
+    TOTAL=$((TOTAL + 1))
 
     echo -e "\n${BLUE}[$TOTAL]${NC} Running: ${CYAN}$name${NC}"
     # Use unquoted $filter to allow bash to split arguments (e.g. "-p oracle-cli")
     if cargo test $filter 2>&1 | tail -3; then
-        ((PASS++))
+        PASS=$((PASS + 1))
         echo -e "  ${GREEN}[PASS]${NC} $name"
     else
-        ((FAIL++))
+        FAIL=$((FAIL + 1))
         echo -e "  ${RED}[FAIL]${NC} $name"
     fi
 }

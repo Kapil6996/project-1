@@ -103,7 +103,10 @@ impl AcquisitionCoordinator {
         serial: &str,
         artifact: &DiscoveredArtifact,
     ) -> OracleResult<AcquiredArtifact> {
-        let cmd = format!("cat '{}'", artifact.device_path);
+        let cmd = match artifact.artifact_class {
+            oracle_core::types::ArtifactClass::KernelLogs => "dmesg".to_string(),
+            _ => format!("cat '{}'", artifact.device_path),
+        };
         let output = adb.shell_command(serial, &cmd)?;
         let raw_bytes = output.into_bytes();
 

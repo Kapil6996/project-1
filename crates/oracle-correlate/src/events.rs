@@ -62,6 +62,8 @@ pub enum ConnectionEventType {
     HotspotStarted,
     /// Hotspot was deactivated on the device.
     HotspotStopped,
+    /// Network is saved/configured on the device.
+    SavedNetwork,
 }
 
 impl std::fmt::Display for ConnectionEventType {
@@ -74,6 +76,7 @@ impl std::fmt::Display for ConnectionEventType {
             ConnectionEventType::Handoff => write!(f, "HANDOFF"),
             ConnectionEventType::HotspotStarted => write!(f, "HOTSPOT_STARTED"),
             ConnectionEventType::HotspotStopped => write!(f, "HOTSPOT_STOPPED"),
+            ConnectionEventType::SavedNetwork => write!(f, "SAVED_NETWORK"),
         }
     }
 }

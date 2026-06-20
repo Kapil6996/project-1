@@ -1043,6 +1043,35 @@ impl ForensicPipeline {
                 evidence,
                 ip,
             );
+        } else if norm.record_type == "wifi_configured_network" {
+            let ssid = norm
+                .record_data
+                .get("ssid")
+                .and_then(|v| v.as_str());
+            let bssid = norm
+                .record_data
+                .get("bssid")
+                .and_then(|v| v.as_str());
+
+            let (network_id, network_label) = self.match_network(resolved_networks, ssid, bssid);
+
+            let evidence = EventEvidence {
+                artifact_id: norm.artifact_id,
+                record_id: norm.record_id,
+                description: format!("Saved Wi-Fi Profile: {}", network_label),
+                timestamp: Utc::now(), // Saved network profiles often lack timestamps in Android; using extraction time
+                confidence: 0.95,
+            };
+
+            reconstructor.record_evidence(
+                ConnectionEventType::SavedNetwork,
+                network_id,
+                &network_label,
+                SecurityProtocol::Unknown,
+                NetworkRole::DeviceAsClient,
+                evidence,
+                None,
+            );
         }
     }
 
@@ -1134,19 +1163,26 @@ impl ForensicPipeline {
 
             let score = ScoringEngine::compute(&scoring_input);
 
+            let is_saved_only = session.events.iter().all(|e| e.event_type == oracle_correlate::events::ConnectionEventType::SavedNetwork);
+
             let f = ReportFinding {
                 finding_number: format!("F-{:03}", finding_counter),
-                title: format!(
-                    "Device associated with network \"{}\"",
-                    session.network_label
-                ),
-                description: format!(
-                    "Forensic timeline analysis indicates device associated with \
-                     network \"{}\" between {} and {}.",
-                    session.network_label,
-                    session.start_time.format("%Y-%m-%d %H:%M:%S UTC"),
-                    session.end_time.format("%Y-%m-%d %H:%M:%S UTC")
-                ),
+                title: if is_saved_only {
+                    format!("Saved Wi-Fi configuration for network \"{}\"", session.network_label)
+                } else {
+                    format!("Device associated with network \"{}\"", session.network_label)
+                },
+                description: if is_saved_only {
+                    format!("Forensic analysis extracted a saved configuration for network \"{}\". No active connection logs were found.", session.network_label)
+                } else {
+                    format!(
+                        "Forensic timeline analysis indicates device associated with \
+                         network \"{}\" between {} and {}.",
+                        session.network_label,
+                        session.start_time.format("%Y-%m-%d %H:%M:%S UTC"),
+                        session.end_time.format("%Y-%m-%d %H:%M:%S UTC")
+                    )
+                },
                 network_ssid: Some(session.network_label.clone()),
                 network_bssid: session.events.first().and_then(|e| {
                     if e.network_label != "WIFI"

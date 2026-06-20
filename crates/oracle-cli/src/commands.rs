@@ -318,7 +318,7 @@ pub fn handle_discover(config: &OracleConfig, serial: &str) -> Result<()> {
         for art in &scan_result.found {
             println!(
                 "    • [{:?}] {} ({} bytes)",
-                art.artifact_class, art.device_path, art.size_bytes
+                art.artifact_class, art.device_path, art.file_size.unwrap_or(0)
             );
         }
     }
@@ -326,7 +326,7 @@ pub fn handle_discover(config: &OracleConfig, serial: &str) -> Result<()> {
     if !scan_result.inaccessible.is_empty() {
         println!("\n  Inaccessible Paths:");
         for path in &scan_result.inaccessible {
-            println!("    ✗ {} — {}", path.path, path.reason);
+            println!("    ✗ {} — {}", path.device_path, path.reason);
         }
     }
 

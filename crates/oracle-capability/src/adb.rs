@@ -124,7 +124,7 @@ pub trait AdbInterface {
 /// # Examples
 ///
 /// ```no_run
-/// use oracle_capability::adb::LiveAdbInterface;
+/// use oracle_capability::adb::{AdbInterface, LiveAdbInterface};
 ///
 /// let adb = LiveAdbInterface::new();
 /// let devices = adb.list_devices().unwrap();

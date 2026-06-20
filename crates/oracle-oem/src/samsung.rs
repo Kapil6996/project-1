@@ -238,11 +238,13 @@ impl SamsungWifiLogParser {
             return None;
         }
 
-        // Check for connection-related keywords
-        let event_type = if lower.contains("connected") {
-            "connected"
-        } else if lower.contains("disconnected") {
+        // Check for connection-related keywords.
+        // IMPORTANT: check "disconnected" before "connected" because
+        // "disconnected" contains "connected" as a substring.
+        let event_type = if lower.contains("disconnected") {
             "disconnected"
+        } else if lower.contains("connected") {
+            "connected"
         } else if lower.contains("connecting") {
             "connecting"
         } else if lower.contains("associating") {

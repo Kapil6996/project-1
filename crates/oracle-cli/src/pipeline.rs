@@ -935,7 +935,7 @@ impl ForensicPipeline {
     fn reconstruct_event(
         &self,
         norm: &NormalizedRecord,
-        resolved_networks: &[oracle_correlate::types::ResolvedNetworkIdentity],
+        resolved_networks: &[oracle_correlate::types::ResolvedNetwork],
         reconstructor: &mut EventReconstructor,
     ) {
         if norm.record_type == "connectivity_event" {
@@ -1049,7 +1049,7 @@ impl ForensicPipeline {
     /// Match a record against resolved network identities.
     fn match_network(
         &self,
-        resolved_networks: &[oracle_correlate::types::ResolvedNetworkIdentity],
+        resolved_networks: &[oracle_correlate::types::ResolvedNetwork],
         _ssid: Option<&str>,
         _bssid: Option<&str>,
     ) -> (oracle_correlate::types::NetworkIdentityId, String) {

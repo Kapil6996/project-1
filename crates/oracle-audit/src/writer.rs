@@ -673,10 +673,10 @@ mod tests {
         let last_hash;
         let next_index;
 
-        // First session: write some entries.
+        // First session: write some complete entries (intent + result pairs).
         {
             let mut writer = AuditLogWriter::new(&db_path).unwrap();
-            writer
+            let idx1 = writer
                 .log_intent(
                     None,
                     AuditOperationType::SystemStartup,
@@ -686,12 +686,26 @@ mod tests {
                 )
                 .unwrap();
             writer
+                .log_result(
+                    idx1,
+                    AuditResult::Success,
+                    json!({"message": "Startup complete"}),
+                )
+                .unwrap();
+            let idx2 = writer
                 .log_intent(
                     None,
                     AuditOperationType::InvestigationCreated,
                     "Examiner A",
                     "Case #1",
                     json!({}),
+                )
+                .unwrap();
+            writer
+                .log_result(
+                    idx2,
+                    AuditResult::Success,
+                    json!({"message": "Case #1 created"}),
                 )
                 .unwrap();
             last_hash = writer.last_hash().to_string();
